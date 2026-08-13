@@ -12,8 +12,9 @@ export default function MainLayout() {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
+          borderTopWidth: 1,
           height: 68,
-          paddingTop: 8,
+          paddingTop: 6,
           paddingBottom: 8,
         },
 
@@ -21,15 +22,18 @@ export default function MainLayout() {
         tabBarInactiveTintColor: colors.textMuted,
 
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
+          fontSize: 10,
+          fontWeight: '700',
         },
       }}
     >
+      {/* HOME */}
+
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
+
           tabBarIcon: ({ color, size }) => (
             <Ionicons
               name="home-outline"
@@ -40,10 +44,13 @@ export default function MainLayout() {
         }}
       />
 
+      {/* RENT */}
+
       <Tabs.Screen
         name="rent"
         options={{
           title: 'Rent',
+
           tabBarIcon: ({ color, size }) => (
             <Ionicons
               name="car-outline"
@@ -54,13 +61,16 @@ export default function MainLayout() {
         }}
       />
 
+      {/* BUY & SELL */}
+
       <Tabs.Screen
         name="marketplace"
         options={{
           title: 'Buy & Sell',
+
           tabBarIcon: ({ color, size }) => (
             <Ionicons
-              name="swap-horizontal-outline"
+              name="storefront-outline"
               size={size}
               color={color}
             />
@@ -68,10 +78,13 @@ export default function MainLayout() {
         }}
       />
 
+      {/* PROFILE */}
+
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
+
           tabBarIcon: ({ color, size }) => (
             <Ionicons
               name="person-outline"

@@ -66,7 +66,6 @@ export default function RegisterScreen() {
       const user = await registerUser(
         trimmedEmail,
         password,
-        password,
         trimmedPhone,
         { name: trimmedName },
       );

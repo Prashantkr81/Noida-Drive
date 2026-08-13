@@ -3,6 +3,13 @@
     "name": "noida-drive",
     "slug": "noida-drive",
     "version": "1.0.0",
-    "newArchEnabled": true
+    "newArchEnabled": true,
+    "plugins": [
+      "expo-router",
+      "expo-splash-screen"
+    ],
+    "android": {
+      "package": "com.prashantkr81.noidadrive"
+    }
   }
 }

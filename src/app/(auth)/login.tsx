@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import {
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    Alert,
+    Pressable,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
 } from 'react-native';
 
 import { router } from 'expo-router';
 
-import { loginUser } from '../../services/firebase/auth';
 import { colors } from '../../constants/colors';
+import { loginUser } from '../../services/firebase/auth';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -89,7 +89,7 @@ export default function LoginScreen() {
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>
-          Don't have an account?
+          Do not have an account?
         </Text>
 
         <Pressable

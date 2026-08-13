@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import {
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    Alert,
+    Pressable,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
 } from 'react-native';
 
 import { router } from 'expo-router';
 
-import { resetPassword } from '../../services/firebase/auth';
 import { colors } from '../../constants/colors';
+import { resetPassword } from '../../services/firebase/auth';
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
@@ -51,7 +51,7 @@ export default function ForgotPasswordScreen() {
       <Text style={styles.title}>Reset Password</Text>
 
       <Text style={styles.subtitle}>
-        Enter your email and we'll send you a reset link.
+        Enter your email and we will send you a reset link.
       </Text>
 
       <TextInput

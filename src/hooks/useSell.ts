@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
 
-import { Booking } from '../types';
+import { SellSubmission } from '../types';
 import {
-  subscribeToMyBookings,
-} from '../services/firebase/bookings';
+  subscribeToMySellSubmissions,
+} from '../services/firebase/sell';
 
 import { useAuth } from './useAuth';
 
-export const useBookings = () => {
+export const useSell = () => {
   const { user } = useAuth();
 
-  const [bookings, setBookings] =
-    useState<Booking[]>([]);
+  const [submissions, setSubmissions] =
+    useState<SellSubmission[]>([]);
 
   const [loading, setLoading] =
     useState(true);
@@ -20,9 +20,8 @@ export const useBookings = () => {
     useState<Error | null>(null);
 
   useEffect(() => {
-    // User logged out
     if (!user) {
-      setBookings([]);
+      setSubmissions([]);
       setLoading(false);
       setError(null);
       return;
@@ -32,17 +31,17 @@ export const useBookings = () => {
     setError(null);
 
     const unsubscribe =
-      subscribeToMyBookings(
+      subscribeToMySellSubmissions(
         user.uid,
 
         (data) => {
-          setBookings(data);
+          setSubmissions(data);
           setLoading(false);
         },
 
         (err) => {
           console.error(
-            'BOOKINGS HOOK ERROR:',
+            'SELL HOOK ERROR:',
             err,
           );
 
@@ -55,7 +54,7 @@ export const useBookings = () => {
   }, [user]);
 
   return {
-    bookings,
+    submissions,
     loading,
     error,
   };

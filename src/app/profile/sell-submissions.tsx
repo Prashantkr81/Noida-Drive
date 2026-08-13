@@ -11,15 +11,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
 import { colors } from '../../constants/colors';
-import { useQuotes } from '../../hooks/useQuotes';
-import { Quote } from '../../types';
+import { useSell } from '../../hooks/useSell';
+import { SellSubmission } from '../../types';
 
-export default function QuotesScreen() {
+export default function SellSubmissionsScreen() {
   const {
-    quotes,
+    submissions,
     loading,
     error,
-  } = useQuotes();
+  } = useSell();
 
   if (loading) {
     return (
@@ -30,7 +30,7 @@ export default function QuotesScreen() {
         />
 
         <Text style={styles.loadingText}>
-          Loading your quotes...
+          Loading your submissions...
         </Text>
       </View>
     );
@@ -46,7 +46,7 @@ export default function QuotesScreen() {
         />
 
         <Text style={styles.errorTitle}>
-          Unable to load quotes
+          Unable to load submissions
         </Text>
 
         <Text style={styles.errorText}>
@@ -58,7 +58,6 @@ export default function QuotesScreen() {
 
   return (
     <View style={styles.container}>
-
       {/* Header */}
 
       <View style={styles.header}>
@@ -75,12 +74,12 @@ export default function QuotesScreen() {
 
         <View style={styles.headerCenter}>
           <Text style={styles.title}>
-            My Quotes
+            My Sell Submissions
           </Text>
 
           <Text style={styles.subtitle}>
-            {quotes.length} quote
-            {quotes.length !== 1
+            {submissions.length} submission
+            {submissions.length !== 1
               ? 's'
               : ''}
           </Text>
@@ -89,24 +88,24 @@ export default function QuotesScreen() {
         <View style={styles.headerSpace} />
       </View>
 
-      {/* Quotes */}
+      {/* Submissions */}
 
       <FlatList
-        data={quotes}
+        data={submissions}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.list,
-          quotes.length === 0 &&
+          submissions.length === 0 &&
             styles.emptyList,
         ]}
         renderItem={({ item }) => (
-          <QuoteCard
-            quote={item}
+          <SubmissionCard
+            submission={item}
             onPress={() =>
               router.push({
                 pathname:
-                  '/quotes/[id]',
+                  '/profile/sell-submission/[id]',
                 params: {
                   id: item.id,
                 },
@@ -115,20 +114,29 @@ export default function QuotesScreen() {
           />
         )}
         ListEmptyComponent={
-          <EmptyQuotes />
+          <EmptySubmissions />
         }
       />
     </View>
   );
 }
 
-function QuoteCard({
-  quote,
+/* ===================================== */
+/* SUBMISSION CARD */
+/* ===================================== */
+
+function SubmissionCard({
+  submission,
   onPress,
 }: {
-  quote: Quote;
+  submission: SellSubmission;
   onPress: () => void;
 }) {
+  const status =
+    getStatusConfig(
+      submission.status,
+    );
+
   return (
     <Pressable
       style={styles.card}
@@ -136,8 +144,8 @@ function QuoteCard({
     >
       <View style={styles.carIcon}>
         <Ionicons
-          name="car-outline"
-          size={23}
+          name="car-sport-outline"
+          size={24}
           color={colors.primary}
         />
       </View>
@@ -148,32 +156,61 @@ function QuoteCard({
             style={styles.carName}
             numberOfLines={1}
           >
-            {quote.carMake}{' '}
-            {quote.carModel}
+            {submission.make}{' '}
+            {submission.model}
           </Text>
 
-          <StatusBadge
-            status={quote.status}
-          />
+          <View
+            style={[
+              styles.status,
+              {
+                borderColor:
+                  status.color,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.statusText,
+                {
+                  color:
+                    status.color,
+                },
+              ]}
+            >
+              {status.label}
+            </Text>
+          </View>
         </View>
 
-        <Text style={styles.offerLabel}>
-          YOUR OFFER
-        </Text>
-
-        <Text style={styles.price}>
-          ₹
-          {quote.offeredPrice.toLocaleString(
+        <Text style={styles.carMeta}>
+          {submission.year} •{' '}
+          {Number(
+            submission.kilometersDriven,
+          ).toLocaleString(
             'en-IN',
-          )}
+          )}{' '}
+          km
         </Text>
 
-        <View style={styles.bottomRow}>
-          <Text style={styles.date}>
-            {formatDate(
-              quote.createdAt,
-            )}
-          </Text>
+        <View style={styles.priceRow}>
+          <View>
+            <Text
+              style={styles.priceLabel}
+            >
+              EXPECTED PRICE
+            </Text>
+
+            <Text style={styles.price}>
+              {submission.expectedPrice
+                ? `₹${Number(
+                    submission.expectedPrice,
+                  ).toLocaleString(
+                    'en-IN',
+                  )}`
+                : 'Not specified'}
+            </Text>
+          </View>
 
           <Ionicons
             name="chevron-forward"
@@ -181,105 +218,129 @@ function QuoteCard({
             color={colors.textMuted}
           />
         </View>
+
+        <View style={styles.bottomRow}>
+          <Text style={styles.date}>
+            {formatDate(
+              submission.createdAt,
+            )}
+          </Text>
+
+          <Text
+            style={[
+              styles.statusDescription,
+              {
+                color: status.color,
+              },
+            ]}
+          >
+            {status.shortDescription}
+          </Text>
+        </View>
       </View>
     </Pressable>
   );
 }
 
-function StatusBadge({
-  status,
-}: {
-  status: Quote['status'];
-}) {
-  const config = {
-    pending: {
-      label: 'Pending',
-      color: colors.primary,
-    },
+/* ===================================== */
+/* STATUS */
+/* ===================================== */
 
-    reviewing: {
-      label: 'Reviewing',
-      color: '#F59E0B',
-    },
+function getStatusConfig(
+  status: SellSubmission['status'],
+) {
+  switch (status) {
+    case 'reviewing':
+      return {
+        label: 'Reviewing',
+        color: '#3B82F6',
+        shortDescription:
+          'Under review',
+      };
 
-    accepted: {
-      label: 'Accepted',
-      color: '#22C55E',
-    },
+    case 'approved':
+      return {
+        label: 'Approved',
+        color: '#22C55E',
+        shortDescription:
+          'Listing approved',
+      };
 
-    rejected: {
-      label: 'Rejected',
-      color: colors.error,
-    },
+    case 'rejected':
+      return {
+        label: 'Rejected',
+        color: colors.error,
+        shortDescription:
+          'Not approved',
+      };
 
-    withdrawn: {
-      label: 'Withdrawn',
-      color: colors.textMuted,
-    },
-  };
+    case 'cancelled':
+      return {
+        label: 'Cancelled',
+        color: colors.textMuted,
+        shortDescription:
+          'Cancelled',
+      };
 
-  const current =
-    config[status];
-
-  return (
-    <View
-      style={[
-        styles.status,
-        {
-          borderColor:
-            current.color,
-        },
-      ]}
-    >
-      <Text
-        style={[
-          styles.statusText,
-          {
-            color: current.color,
-          },
-        ]}
-      >
-        {current.label}
-      </Text>
-    </View>
-  );
+    case 'pending':
+    default:
+      return {
+        label: 'Pending',
+        color: '#F59E0B',
+        shortDescription:
+          'Waiting for review',
+      };
+  }
 }
 
-function EmptyQuotes() {
+/* ===================================== */
+/* EMPTY STATE */
+/* ===================================== */
+
+function EmptySubmissions() {
   return (
     <View style={styles.empty}>
       <View style={styles.emptyIcon}>
         <Ionicons
-          name="pricetag-outline"
+          name="car-outline"
           size={38}
           color={colors.primary}
         />
       </View>
 
       <Text style={styles.emptyTitle}>
-        No Quotes Yet
+        No Sell Submissions
       </Text>
 
       <Text style={styles.emptyText}>
-        When you submit a quote for a car,
-        it will appear here.
+        Cars you submit for selling will
+        appear here once you create a
+        submission.
       </Text>
 
       <Pressable
-        style={styles.browseButton}
+        style={styles.sellButton}
         onPress={() =>
-          router.replace(
-            '/marketplace',
-          )
+          router.push('/sell')
         }
       >
-        <Text style={styles.browseText}>
-          Browse Cars
+        <Text style={styles.sellButtonText}>
+          Sell Your Car
         </Text>
+
+        <Ionicons
+          name="arrow-forward"
+          size={16}
+          color={colors.background}
+        />
       </Pressable>
     </View>
   );
 }
+
+/* ===================================== */
+/* DATE */
+/* ===================================== */
 
 function formatDate(
   value: unknown,
@@ -312,15 +373,21 @@ function formatDate(
   return 'Recently';
 }
 
+/* ===================================== */
+/* STYLES */
+/* ===================================== */
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor:
+      colors.background,
   },
 
   center: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor:
+      colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 25,
@@ -328,6 +395,7 @@ const styles = StyleSheet.create({
 
   loadingText: {
     color: colors.textSecondary,
+    fontSize: 11,
     marginTop: 12,
   },
 
@@ -344,6 +412,8 @@ const styles = StyleSheet.create({
     marginTop: 7,
   },
 
+  /* Header */
+
   header: {
     paddingTop: 55,
     paddingHorizontal: 20,
@@ -356,9 +426,11 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 13,
-    backgroundColor: colors.surface,
+    backgroundColor:
+      colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor:
+      colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -370,7 +442,7 @@ const styles = StyleSheet.create({
 
   title: {
     color: colors.white,
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: '900',
   },
 
@@ -384,6 +456,8 @@ const styles = StyleSheet.create({
     width: 42,
   },
 
+  /* List */
+
   list: {
     paddingHorizontal: 20,
     paddingBottom: 35,
@@ -394,10 +468,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
+  /* Card */
+
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor:
+      colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor:
+      colors.border,
     borderRadius: 18,
     padding: 15,
     marginBottom: 12,
@@ -408,7 +486,8 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 14,
-    backgroundColor: colors.surfaceLight,
+    backgroundColor:
+      colors.surfaceLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -443,32 +522,53 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
 
-  offerLabel: {
+  carMeta: {
     color: colors.textMuted,
-    fontSize: 8,
-    fontWeight: '800',
+    fontSize: 9,
+    marginTop: 5,
+  },
+
+  priceRow: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent:
+      'space-between',
+  },
+
+  priceLabel: {
+    color: colors.textMuted,
+    fontSize: 7,
+    fontWeight: '900',
     letterSpacing: 0.7,
-    marginTop: 10,
   },
 
   price: {
     color: colors.primary,
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '900',
     marginTop: 2,
   },
 
   bottomRow: {
-    marginTop: 8,
+    marginTop: 9,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent:
+      'space-between',
   },
 
   date: {
     color: colors.textMuted,
     fontSize: 9,
   },
+
+  statusDescription: {
+    fontSize: 8,
+    fontWeight: '800',
+  },
+
+  /* Empty */
 
   empty: {
     alignItems: 'center',
@@ -479,9 +579,11 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 25,
-    backgroundColor: colors.surface,
+    backgroundColor:
+      colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor:
+      colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -501,15 +603,19 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 
-  browseButton: {
+  sellButton: {
     marginTop: 20,
-    backgroundColor: colors.primary,
+    backgroundColor:
+      colors.primary,
     paddingHorizontal: 22,
     paddingVertical: 12,
     borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
   },
 
-  browseText: {
+  sellButtonText: {
     color: colors.background,
     fontSize: 12,
     fontWeight: '900',

@@ -1,13 +1,17 @@
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import {
-  createContext,
-  ReactNode,
-  useEffect,
-  useState,
+    createContext,
+    ReactNode,
+    useEffect,
+    useState,
 } from 'react';
 
 import { auth, db } from '../services/firebase/config';
+import {
+    removeUserFromStorage,
+    saveUserToStorage,
+} from '../store/authStore';
 import { UserProfile } from '../types/user';
 
 interface AuthContextType {
@@ -37,6 +41,18 @@ export function AuthProvider({ children }: Props) {
       async (firebaseUser) => {
         try {
           setUser(firebaseUser);
+
+          if (firebaseUser) {
+            // persist minimal user info for quick rehydration or offline checks
+            await saveUserToStorage({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+              photoURL: firebaseUser.photoURL,
+            });
+          } else {
+            await removeUserFromStorage();
+          }
 
           if (!firebaseUser) {
             setProfile(null);

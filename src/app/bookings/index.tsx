@@ -6,20 +6,19 @@ import {
   Text,
   View,
 } from 'react-native';
-
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
 import { colors } from '../../constants/colors';
-import { useQuotes } from '../../hooks/useQuotes';
-import { Quote } from '../../types';
+import { useBookings } from '../../hooks/useBookings';
+import { Booking } from '../../types';
 
-export default function QuotesScreen() {
+export default function BookingsScreen() {
   const {
-    quotes,
+    bookings,
     loading,
     error,
-  } = useQuotes();
+  } = useBookings();
 
   if (loading) {
     return (
@@ -30,7 +29,7 @@ export default function QuotesScreen() {
         />
 
         <Text style={styles.loadingText}>
-          Loading your quotes...
+          Loading your rentals...
         </Text>
       </View>
     );
@@ -46,7 +45,7 @@ export default function QuotesScreen() {
         />
 
         <Text style={styles.errorTitle}>
-          Unable to load quotes
+          Unable to load rentals
         </Text>
 
         <Text style={styles.errorText}>
@@ -58,7 +57,6 @@ export default function QuotesScreen() {
 
   return (
     <View style={styles.container}>
-
       {/* Header */}
 
       <View style={styles.header}>
@@ -75,12 +73,12 @@ export default function QuotesScreen() {
 
         <View style={styles.headerCenter}>
           <Text style={styles.title}>
-            My Quotes
+            My Rentals
           </Text>
 
           <Text style={styles.subtitle}>
-            {quotes.length} quote
-            {quotes.length !== 1
+            {bookings.length} request
+            {bookings.length !== 1
               ? 's'
               : ''}
           </Text>
@@ -89,24 +87,22 @@ export default function QuotesScreen() {
         <View style={styles.headerSpace} />
       </View>
 
-      {/* Quotes */}
-
       <FlatList
-        data={quotes}
+        data={bookings}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.list,
-          quotes.length === 0 &&
+          bookings.length === 0 &&
             styles.emptyList,
         ]}
         renderItem={({ item }) => (
-          <QuoteCard
-            quote={item}
+          <BookingCard
+            booking={item}
             onPress={() =>
               router.push({
                 pathname:
-                  '/quotes/[id]',
+                  '/bookings/[id]',
                 params: {
                   id: item.id,
                 },
@@ -115,18 +111,18 @@ export default function QuotesScreen() {
           />
         )}
         ListEmptyComponent={
-          <EmptyQuotes />
+          <EmptyBookings />
         }
       />
     </View>
   );
 }
 
-function QuoteCard({
-  quote,
+function BookingCard({
+  booking,
   onPress,
 }: {
-  quote: Quote;
+  booking: Booking;
   onPress: () => void;
 }) {
   return (
@@ -134,50 +130,104 @@ function QuoteCard({
       style={styles.card}
       onPress={onPress}
     >
+      {/* Car Icon */}
+
       <View style={styles.carIcon}>
         <Ionicons
-          name="car-outline"
-          size={23}
+          name="car-sport-outline"
+          size={24}
           color={colors.primary}
         />
       </View>
 
       <View style={styles.cardContent}>
+        {/* Top */}
+
         <View style={styles.topRow}>
           <Text
             style={styles.carName}
             numberOfLines={1}
           >
-            {quote.carMake}{' '}
-            {quote.carModel}
+            {booking.carMake}{' '}
+            {booking.carModel}
           </Text>
 
           <StatusBadge
-            status={quote.status}
+            status={booking.status}
           />
         </View>
 
-        <Text style={styles.offerLabel}>
-          YOUR OFFER
-        </Text>
+        {/* Rental Type */}
 
-        <Text style={styles.price}>
-          ₹
-          {quote.offeredPrice.toLocaleString(
-            'en-IN',
-          )}
-        </Text>
+        <View style={styles.rentalTypeRow}>
+          <Ionicons
+            name={
+              booking.rentalType ===
+              'chauffeur'
+                ? 'person-outline'
+                : 'car-outline'
+            }
+            size={13}
+            color={colors.textMuted}
+          />
+
+          <Text style={styles.rentalType}>
+            {booking.rentalType ===
+            'chauffeur'
+              ? 'Chauffeur'
+              : 'Self Drive'}
+          </Text>
+        </View>
+
+        {/* Dates */}
+
+        <View style={styles.dateRow}>
+          <View>
+            <Text style={styles.dateLabel}>
+              START
+            </Text>
+
+            <Text style={styles.date}>
+              {formatDate(
+                booking.startDate,
+              )}
+            </Text>
+          </View>
+
+          <Ionicons
+            name="arrow-forward"
+            size={15}
+            color={colors.textMuted}
+          />
+
+          <View>
+            <Text style={styles.dateLabel}>
+              END
+            </Text>
+
+            <Text style={styles.date}>
+              {formatDate(
+                booking.endDate,
+              )}
+            </Text>
+          </View>
+        </View>
+
+        {/* Bottom */}
 
         <View style={styles.bottomRow}>
-          <Text style={styles.date}>
-            {formatDate(
-              quote.createdAt,
-            )}
+          <Text style={styles.location}>
+            <Ionicons
+              name="location-outline"
+              size={11}
+              color={colors.textMuted}
+            />{' '}
+            {booking.pickupLocation}
           </Text>
 
           <Ionicons
             name="chevron-forward"
-            size={18}
+            size={17}
             color={colors.textMuted}
           />
         </View>
@@ -189,7 +239,7 @@ function QuoteCard({
 function StatusBadge({
   status,
 }: {
-  status: Quote['status'];
+  status: Booking['status'];
 }) {
   const config = {
     pending: {
@@ -202,8 +252,8 @@ function StatusBadge({
       color: '#F59E0B',
     },
 
-    accepted: {
-      label: 'Accepted',
+    confirmed: {
+      label: 'Confirmed',
       color: '#22C55E',
     },
 
@@ -212,9 +262,14 @@ function StatusBadge({
       color: colors.error,
     },
 
-    withdrawn: {
-      label: 'Withdrawn',
+    cancelled: {
+      label: 'Cancelled',
       color: colors.textMuted,
+    },
+
+    completed: {
+      label: 'Completed',
+      color: '#22C55E',
     },
   };
 
@@ -245,36 +300,34 @@ function StatusBadge({
   );
 }
 
-function EmptyQuotes() {
+function EmptyBookings() {
   return (
     <View style={styles.empty}>
       <View style={styles.emptyIcon}>
         <Ionicons
-          name="pricetag-outline"
-          size={38}
+          name="car-outline"
+          size={40}
           color={colors.primary}
         />
       </View>
 
       <Text style={styles.emptyTitle}>
-        No Quotes Yet
+        No Rentals Yet
       </Text>
 
       <Text style={styles.emptyText}>
-        When you submit a quote for a car,
-        it will appear here.
+        Your rental requests and booking
+        history will appear here.
       </Text>
 
       <Pressable
         style={styles.browseButton}
         onPress={() =>
-          router.replace(
-            '/marketplace',
-          )
+          router.replace('/rent')
         }
       >
         <Text style={styles.browseText}>
-          Browse Cars
+          Browse Rental Cars
         </Text>
       </Pressable>
     </View>
@@ -284,13 +337,17 @@ function EmptyQuotes() {
 function formatDate(
   value: unknown,
 ) {
-  if (!value) {
-    return 'Recently';
+  // Current implementation stores
+  // dates as strings from the rental form.
+  if (typeof value === 'string') {
+    return value || 'N/A';
   }
 
+  // Supports Firestore Timestamp
+  // if we switch to Timestamp later.
   if (
+    value &&
     typeof value === 'object' &&
-    value !== null &&
     'toDate' in value
   ) {
     const date = (
@@ -309,7 +366,7 @@ function formatDate(
     );
   }
 
-  return 'Recently';
+  return 'N/A';
 }
 
 const styles = StyleSheet.create({
@@ -443,31 +500,54 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
 
-  offerLabel: {
-    color: colors.textMuted,
-    fontSize: 8,
-    fontWeight: '800',
-    letterSpacing: 0.7,
-    marginTop: 10,
+  rentalTypeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 8,
   },
 
-  price: {
-    color: colors.primary,
-    fontSize: 17,
-    fontWeight: '900',
+  rentalType: {
+    color: colors.textMuted,
+    fontSize: 9,
+  },
+
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 13,
+  },
+
+  dateLabel: {
+    color: colors.textMuted,
+    fontSize: 7,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+  },
+
+  date: {
+    color: colors.textSecondary,
+    fontSize: 10,
+    fontWeight: '700',
     marginTop: 2,
   },
 
   bottomRow: {
-    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    marginTop: 12,
+    paddingTop: 10,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
 
-  date: {
+  location: {
+    flex: 1,
     color: colors.textMuted,
     fontSize: 9,
+    marginRight: 10,
   },
 
   empty: {
@@ -476,9 +556,9 @@ const styles = StyleSheet.create({
   },
 
   emptyIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 25,
+    width: 82,
+    height: 82,
+    borderRadius: 26,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
@@ -504,14 +584,14 @@ const styles = StyleSheet.create({
   browseButton: {
     marginTop: 20,
     backgroundColor: colors.primary,
-    paddingHorizontal: 22,
+    paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 12,
   },
 
   browseText: {
     color: colors.background,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '900',
   },
 });

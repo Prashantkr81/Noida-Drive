@@ -19,14 +19,14 @@ import { useEffect, useState } from 'react';
 
 import { colors } from '../../constants/colors';
 import { db } from '../../services/firebase/config';
-import { Quote } from '../../types';
+import { Booking } from '../../types';
 
-export default function QuoteDetailsScreen() {
+export default function BookingDetailsScreen() {
   const { id } =
     useLocalSearchParams<{ id: string }>();
 
-  const [quote, setQuote] =
-    useState<Quote | null>(null);
+  const [booking, setBooking] =
+    useState<Booking | null>(null);
 
   const [loading, setLoading] =
     useState(true);
@@ -36,30 +36,30 @@ export default function QuoteDetailsScreen() {
 
   useEffect(() => {
     if (!id) {
-      setError('Quote not found.');
+      setError('Booking not found.');
       setLoading(false);
       return;
     }
 
-    const quoteRef = doc(
+    const bookingRef = doc(
       db,
-      'quotes',
+      'bookings',
       id,
     );
 
     const unsubscribe = onSnapshot(
-      quoteRef,
+      bookingRef,
       (snapshot) => {
         if (!snapshot.exists()) {
-          setQuote(null);
+          setBooking(null);
           setError(
-            'This quote no longer exists.',
+            'This rental request no longer exists.',
           );
         } else {
-          setQuote({
+          setBooking({
             id: snapshot.id,
             ...snapshot.data(),
-          } as Quote);
+          } as Booking);
 
           setError('');
         }
@@ -68,12 +68,12 @@ export default function QuoteDetailsScreen() {
       },
       (firebaseError) => {
         console.error(
-          'QUOTE DETAILS ERROR:',
+          'BOOKING DETAILS ERROR:',
           firebaseError,
         );
 
         setError(
-          'Unable to load quote details.',
+          'Unable to load rental request.',
         );
 
         setLoading(false);
@@ -92,30 +92,30 @@ export default function QuoteDetailsScreen() {
         />
 
         <Text style={styles.loadingText}>
-          Loading quote...
+          Loading rental request...
         </Text>
       </View>
     );
   }
 
-  if (!quote) {
+  if (!booking) {
     return (
       <View style={styles.center}>
         <View style={styles.errorIcon}>
           <Ionicons
-            name="pricetag-outline"
-            size={38}
+            name="alert-circle-outline"
+            size={40}
             color={colors.error}
           />
         </View>
 
         <Text style={styles.errorTitle}>
-          Quote Not Found
+          Rental Request Not Found
         </Text>
 
         <Text style={styles.errorText}>
           {error ||
-            'This quote could not be found.'}
+            'This request could not be found.'}
         </Text>
 
         <Pressable
@@ -134,7 +134,7 @@ export default function QuoteDetailsScreen() {
 
   const status =
     getStatusConfig(
-      quote.status,
+      booking.status,
     );
 
   return (
@@ -145,7 +145,7 @@ export default function QuoteDetailsScreen() {
           styles.content
         }
       >
-        {/* Header */}
+        {/* HEADER */}
 
         <View style={styles.header}>
           <Pressable
@@ -161,16 +161,16 @@ export default function QuoteDetailsScreen() {
 
           <View>
             <Text style={styles.eyebrow}>
-              QUOTE REQUEST
+              RENTAL REQUEST
             </Text>
 
             <Text style={styles.title}>
-              Quote Details
+              Request Details
             </Text>
           </View>
         </View>
 
-        {/* Status */}
+        {/* STATUS */}
 
         <View style={styles.statusCard}>
           <View
@@ -213,14 +213,14 @@ export default function QuoteDetailsScreen() {
           </View>
         </View>
 
-        {/* Vehicle */}
+        {/* CAR */}
 
         <SectionTitle title="Vehicle" />
 
         <View style={styles.card}>
           <View style={styles.carIcon}>
             <Ionicons
-              name="car-outline"
+              name="car-sport-outline"
               size={28}
               color={colors.primary}
             />
@@ -228,186 +228,181 @@ export default function QuoteDetailsScreen() {
 
           <View style={styles.carInfo}>
             <Text style={styles.carName}>
-              {quote.carMake}{' '}
-              {quote.carModel}
+              {booking.carMake}{' '}
+              {booking.carModel}
             </Text>
 
             <Text style={styles.carId}>
-              Car ID: {quote.carId}
+              Car ID: {booking.carId}
             </Text>
           </View>
         </View>
 
-        {/* Offer */}
+        {/* RENTAL */}
 
-        <SectionTitle title="Your Offer" />
+        <SectionTitle title="Rental Details" />
 
-        <View style={styles.offerCard}>
-          <Text style={styles.offerLabel}>
-            OFFERED PRICE
-          </Text>
+        <View style={styles.card}>
+          <Detail
+            icon="options-outline"
+            label="Rental Type"
+            value={
+              booking.rentalType ===
+              'chauffeur'
+                ? 'Chauffeur'
+                : 'Self Drive'
+            }
+          />
 
-          <Text style={styles.offerPrice}>
-            ₹
-            {Number(
-              quote.offeredPrice || 0,
-            ).toLocaleString(
-              'en-IN',
+          <Detail
+            icon="calendar-outline"
+            label="Start Date"
+            value={formatDate(
+              booking.startDate,
             )}
-          </Text>
+          />
 
-          <Text style={styles.offerDescription}>
-            This is the price you submitted to
-            the seller.
-          </Text>
+          <Detail
+            icon="calendar-outline"
+            label="End Date"
+            value={formatDate(
+              booking.endDate,
+            )}
+          />
+
+          <Detail
+            icon="location-outline"
+            label="Pickup Location"
+            value={
+              booking.pickupLocation ||
+              'Not specified'
+            }
+          />
+
+          <Detail
+            icon="navigate-outline"
+            label="Drop Location"
+            value={
+              booking.dropLocation ||
+              'Not specified'
+            }
+          />
         </View>
 
-        {/* Message */}
+        {/* PRICE */}
 
-        {quote.message ? (
+        <SectionTitle title="Pricing" />
+
+        <View style={styles.priceCard}>
+          <View style={styles.priceRow}>
+            <Text style={styles.priceLabel}>
+              Estimated Price
+            </Text>
+
+            <Text style={styles.estimatedPrice}>
+              ₹
+              {Number(
+                booking.estimatedPrice || 0,
+              ).toLocaleString(
+                'en-IN',
+              )}
+            </Text>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.priceRow}>
+            <Text style={styles.priceLabel}>
+              Final Price
+            </Text>
+
+            <Text style={styles.finalPrice}>
+              {booking.finalPrice != null
+                ? `₹${Number(
+                    booking.finalPrice,
+                  ).toLocaleString(
+                    'en-IN',
+                  )}`
+                : 'To be confirmed'}
+            </Text>
+          </View>
+        </View>
+
+        {/* SPECIAL REQUEST */}
+
+        {booking.specialRequest ? (
           <>
-            <SectionTitle title="Your Message" />
+            <SectionTitle title="Special Request" />
 
-            <View style={styles.messageCard}>
+            <View style={styles.noteCard}>
               <Ionicons
                 name="chatbubble-ellipses-outline"
                 size={20}
                 color={colors.primary}
               />
 
-              <Text style={styles.messageText}>
-                {quote.message}
+              <Text style={styles.noteText}>
+                {booking.specialRequest}
               </Text>
             </View>
           </>
         ) : null}
 
-        {/* Buyer information */}
+        {/* ADMIN NOTES */}
 
-        <SectionTitle title="Request Information" />
+        {booking.adminNotes ? (
+          <>
+            <SectionTitle title="Admin Update" />
 
-        <View style={styles.card}>
-          <Detail
-            icon="person-outline"
-            label="Buyer"
-            value={
-              quote.buyerName ||
-              'Not specified'
-            }
-          />
+            <View style={styles.noteCard}>
+              <Ionicons
+                name="information-circle-outline"
+                size={20}
+                color={colors.primary}
+              />
 
-          <Detail
-            icon="call-outline"
-            label="Phone"
-            value={
-              quote.buyerPhone ||
-              'Not specified'
-            }
-          />
+              <Text style={styles.noteText}>
+                {booking.adminNotes}
+              </Text>
+            </View>
+          </>
+        ) : null}
 
-          <Detail
-            icon="calendar-outline"
-            label="Submitted"
-            value={formatDate(
-              quote.createdAt,
-            )}
-          />
-        </View>
+        {/* REJECTION */}
 
-        {/* Status information */}
+        {booking.rejectionReason ? (
+          <>
+            <SectionTitle title="Reason" />
 
-        {quote.status ===
-          'pending' && (
-          <View style={styles.infoCard}>
-            <Ionicons
-              name="time-outline"
-              size={21}
-              color={colors.primary}
-            />
-
-            <Text style={styles.infoText}>
-              Your quote has been submitted and
-              is waiting for review.
-            </Text>
-          </View>
-        )}
-
-        {quote.status ===
-          'reviewing' && (
-          <View style={styles.infoCard}>
-            <Ionicons
-              name="eye-outline"
-              size={21}
-              color={colors.primary}
-            />
-
-            <Text style={styles.infoText}>
-              Your quote is currently being
-              reviewed.
-            </Text>
-          </View>
-        )}
-
-        {quote.status ===
-          'accepted' && (
-          <View style={styles.successCard}>
-            <Ionicons
-              name="checkmark-circle-outline"
-              size={21}
-              color="#22C55E"
-            />
-
-            <Text style={styles.successText}>
-              Your quote has been accepted.
-              Further transaction details can
-              be handled through the marketplace
-              workflow.
-            </Text>
-          </View>
-        )}
-
-        {quote.status ===
-          'rejected' && (
-          <View style={styles.rejectionCard}>
-            <Ionicons
-              name="close-circle-outline"
-              size={21}
-              color={colors.error}
-            />
-
-            <Text
-              style={styles.rejectionText}
+            <View
+              style={styles.rejectionCard}
             >
-              This quote was rejected by the
-              seller.
-            </Text>
-          </View>
-        )}
+              <Ionicons
+                name="close-circle-outline"
+                size={20}
+                color={colors.error}
+              />
 
-        {quote.status ===
-          'withdrawn' && (
-          <View style={styles.withdrawnCard}>
-            <Ionicons
-              name="remove-circle-outline"
-              size={21}
-              color={colors.textMuted}
-            />
+              <Text
+                style={
+                  styles.rejectionText
+                }
+              >
+                {booking.rejectionReason}
+              </Text>
+            </View>
+          </>
+        ) : null}
 
-            <Text style={styles.withdrawnText}>
-              This quote has been withdrawn.
-            </Text>
-          </View>
-        )}
-
-        {/* Quote ID */}
+        {/* REQUEST ID */}
 
         <View style={styles.idCard}>
           <Text style={styles.idLabel}>
-            QUOTE ID
+            REQUEST ID
           </Text>
 
           <Text style={styles.idValue}>
-            {quote.id}
+            {booking.id}
           </Text>
         </View>
       </ScrollView>
@@ -420,27 +415,27 @@ export default function QuoteDetailsScreen() {
 /* ===================================== */
 
 function getStatusConfig(
-  status: Quote['status'],
+  status: Booking['status'],
 ) {
   switch (status) {
     case 'reviewing':
       return {
-        label: 'Reviewing',
+        label: 'Under Review',
         color: '#F59E0B',
         icon:
           'eye-outline' as const,
         description:
-          'Your quote is currently being reviewed.',
+          'Our team is currently reviewing your rental request.',
       };
 
-    case 'accepted':
+    case 'confirmed':
       return {
-        label: 'Accepted',
+        label: 'Confirmed',
         color: '#22C55E',
         icon:
           'checkmark-circle-outline' as const,
         description:
-          'Your quote has been accepted.',
+          'Your rental request has been confirmed.',
       };
 
     case 'rejected':
@@ -450,17 +445,27 @@ function getStatusConfig(
         icon:
           'close-circle-outline' as const,
         description:
-          'Your quote was not accepted.',
+          'Your rental request was not approved.',
       };
 
-    case 'withdrawn':
+    case 'cancelled':
       return {
-        label: 'Withdrawn',
+        label: 'Cancelled',
         color: colors.textMuted,
         icon:
           'remove-circle-outline' as const,
         description:
-          'This quote has been withdrawn.',
+          'This rental request has been cancelled.',
+      };
+
+    case 'completed':
+      return {
+        label: 'Completed',
+        color: '#22C55E',
+        icon:
+          'checkmark-done-outline' as const,
+        description:
+          'This rental has been completed.',
       };
 
     case 'pending':
@@ -471,13 +476,13 @@ function getStatusConfig(
         icon:
           'time-outline' as const,
         description:
-          'Your quote is waiting for review.',
+          'Your rental request is waiting for review.',
       };
   }
 }
 
 /* ===================================== */
-/* SECTION TITLE */
+/* SECTION */
 /* ===================================== */
 
 function SectionTitle({
@@ -535,13 +540,13 @@ function Detail({
 function formatDate(
   value: unknown,
 ) {
-  if (!value) {
-    return 'Recently';
+  if (typeof value === 'string') {
+    return value || 'N/A';
   }
 
   if (
+    value &&
     typeof value === 'object' &&
-    value !== null &&
     'toDate' in value
   ) {
     const date = (
@@ -560,7 +565,7 @@ function formatDate(
     );
   }
 
-  return 'Recently';
+  return 'N/A';
 }
 
 /* ===================================== */
@@ -570,7 +575,8 @@ function formatDate(
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor:
+      colors.background,
   },
 
   content: {
@@ -581,7 +587,8 @@ const styles = StyleSheet.create({
 
   center: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor:
+      colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 30,
@@ -605,9 +612,11 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 13,
-    backgroundColor: colors.surface,
+    backgroundColor:
+      colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor:
+      colors.border,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 13,
@@ -632,9 +641,11 @@ const styles = StyleSheet.create({
   statusCard: {
     padding: 15,
     borderRadius: 17,
-    backgroundColor: colors.surface,
+    backgroundColor:
+      colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor:
+      colors.border,
     flexDirection: 'row',
   },
 
@@ -682,20 +693,23 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor:
+      colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor:
+      colors.border,
     borderRadius: 17,
     padding: 15,
   },
 
-  /* Vehicle */
+  /* Car */
 
   carIcon: {
     width: 52,
     height: 52,
     borderRadius: 14,
-    backgroundColor: colors.surfaceLight,
+    backgroundColor:
+      colors.surfaceLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -716,36 +730,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  /* Offer */
-
-  offerCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 17,
-    padding: 18,
-  },
-
-  offerLabel: {
-    color: colors.textMuted,
-    fontSize: 8,
-    fontWeight: '900',
-    letterSpacing: 1,
-  },
-
-  offerPrice: {
-    color: colors.primary,
-    fontSize: 28,
-    fontWeight: '900',
-    marginTop: 5,
-  },
-
-  offerDescription: {
-    color: colors.textSecondary,
-    fontSize: 10,
-    marginTop: 7,
-  },
-
   /* Details */
 
   detail: {
@@ -758,7 +742,8 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: colors.surfaceLight,
+    backgroundColor:
+      colors.surfaceLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -781,70 +766,78 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
 
-  /* Message */
+  /* Price */
 
-  messageCard: {
-    backgroundColor: colors.surface,
+  priceCard: {
+    backgroundColor:
+      colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor:
+      colors.border,
+    borderRadius: 17,
+    padding: 16,
+  },
+
+  priceRow: {
+    flexDirection: 'row',
+    justifyContent:
+      'space-between',
+    alignItems: 'center',
+  },
+
+  priceLabel: {
+    color: colors.textSecondary,
+    fontSize: 11,
+  },
+
+  estimatedPrice: {
+    color: colors.primary,
+    fontSize: 16,
+    fontWeight: '900',
+  },
+
+  finalPrice: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor:
+      colors.border,
+    marginVertical: 13,
+  },
+
+  /* Notes */
+
+  noteCard: {
+    backgroundColor:
+      colors.surface,
+    borderWidth: 1,
+    borderColor:
+      colors.border,
     borderRadius: 14,
     padding: 14,
     flexDirection: 'row',
     gap: 9,
   },
 
-  messageText: {
+  noteText: {
     flex: 1,
     color: colors.textSecondary,
-    fontSize: 10,
-    lineHeight: 16,
-  },
-
-  /* Info */
-
-  infoCard: {
-    marginTop: 20,
-    padding: 14,
-    borderRadius: 14,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    flexDirection: 'row',
-    gap: 9,
-  },
-
-  infoText: {
-    flex: 1,
-    color: colors.textSecondary,
-    fontSize: 10,
-    lineHeight: 16,
-  },
-
-  successCard: {
-    marginTop: 20,
-    padding: 14,
-    borderRadius: 14,
-    backgroundColor: 'rgba(34,197,94,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(34,197,94,0.2)',
-    flexDirection: 'row',
-    gap: 9,
-  },
-
-  successText: {
-    flex: 1,
-    color: '#22C55E',
     fontSize: 10,
     lineHeight: 16,
   },
 
   rejectionCard: {
-    marginTop: 20,
-    padding: 14,
-    borderRadius: 14,
-    backgroundColor: 'rgba(239,68,68,0.08)',
+    backgroundColor:
+      'rgba(239,68,68,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(239,68,68,0.2)',
+    borderColor:
+      'rgba(239,68,68,0.2)',
+    borderRadius: 14,
+    padding: 14,
     flexDirection: 'row',
     gap: 9,
   },
@@ -856,32 +849,16 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
 
-  withdrawnCard: {
-    marginTop: 20,
-    padding: 14,
-    borderRadius: 14,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    flexDirection: 'row',
-    gap: 9,
-  },
-
-  withdrawnText: {
-    flex: 1,
-    color: colors.textMuted,
-    fontSize: 10,
-    lineHeight: 16,
-  },
-
   /* ID */
 
   idCard: {
     marginTop: 20,
     padding: 13,
-    backgroundColor: colors.surface,
+    backgroundColor:
+      colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor:
+      colors.border,
     borderRadius: 12,
   },
 
@@ -904,7 +881,8 @@ const styles = StyleSheet.create({
     width: 75,
     height: 75,
     borderRadius: 24,
-    backgroundColor: 'rgba(239,68,68,0.08)',
+    backgroundColor:
+      'rgba(239,68,68,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -914,6 +892,7 @@ const styles = StyleSheet.create({
     fontSize: 19,
     fontWeight: '900',
     marginTop: 17,
+    textAlign: 'center',
   },
 
   errorText: {
@@ -929,7 +908,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 25,
     marginTop: 20,
     borderRadius: 13,
-    backgroundColor: colors.primary,
+    backgroundColor:
+      colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
