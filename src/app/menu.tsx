@@ -91,7 +91,7 @@ export default function MenuScreen() {
         <MenuItem
           icon="call-outline"
           title="Contact Us"
-          onPress={() => router.push('/contact')}
+          onPress={() => router.push('/contact-us')}
         />
 
         <MenuItem
@@ -103,7 +103,7 @@ export default function MenuScreen() {
         <MenuItem
           icon="settings-outline"
           title="Settings"
-          onPress={() => router.push('/settings')}
+          onPress={() => router.push('/profile/settings')}
         />
 
       </View>

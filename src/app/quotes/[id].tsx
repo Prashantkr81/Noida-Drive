@@ -1,21 +1,21 @@
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  router,
-  useLocalSearchParams,
+    router,
+    useLocalSearchParams,
 } from 'expo-router';
 import {
-  doc,
-  onSnapshot,
+    doc,
+    onSnapshot,
 } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
+} from 'react-native';
 
 import { colors } from '../../constants/colors';
 import { db } from '../../services/firebase/config';

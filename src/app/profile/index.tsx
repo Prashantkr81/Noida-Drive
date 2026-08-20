@@ -6,6 +6,7 @@ import {
   Text,
   View,
 } from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { signOut } from 'firebase/auth';
@@ -145,7 +146,9 @@ export default function ProfileScreen() {
             title="My Bookings"
             subtitle="View your rental requests and history"
             onPress={() =>
-              router.push('/bookings')
+              router.push(
+                '/bookings',
+              )
             }
           />
 
@@ -156,7 +159,9 @@ export default function ProfileScreen() {
             title="My Quotes"
             subtitle="Track quotes sent and received"
             onPress={() =>
-              router.push('/quotes')
+              router.push(
+                '/quotes',
+              )
             }
           />
 
@@ -222,42 +227,22 @@ export default function ProfileScreen() {
         </View>
 
         {/* ================================= */}
-        {/* SUPPORT */}
+        {/* ABOUT */}
         {/* ================================= */}
 
         <Text style={styles.sectionTitle}>
-          Support
+          About
         </Text>
 
         <View style={styles.menuCard}>
           <ProfileMenuItem
-            icon="help-circle-outline"
-            title="Help & Support"
-            subtitle="Get help with your account or bookings"
-            onPress={() =>
-              router.push('/help')
-            }
-          />
-
-          <Divider />
-
-          <ProfileMenuItem
-            icon="call-outline"
-            title="Contact Us"
-            subtitle="Talk to the Noida Drive team"
-            onPress={() =>
-              router.push('/contact')
-            }
-          />
-
-          <Divider />
-
-          <ProfileMenuItem
             icon="information-circle-outline"
             title="About Noida Drive"
-            subtitle="Learn more about us"
+            subtitle="Learn more about the app"
             onPress={() =>
-              router.push('/about')
+              router.push(
+                '/about',
+              )
             }
           />
         </View>

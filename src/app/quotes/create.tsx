@@ -10,21 +10,26 @@ import {
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
+
 import {
   router,
   useLocalSearchParams,
 } from 'expo-router';
-import { useEffect, useState } from 'react';
 
-import { colors } from '../../constants/colors';
-import { useAuth } from '../../hooks/useAuth';
-import { createQuote } from '../../services/firebase/quotes';
-import { db } from '../../services/firebase/config';
+import {
+  useEffect,
+  useState,
+} from 'react';
 
 import {
   doc,
   getDoc,
 } from 'firebase/firestore';
+
+import { colors } from '../../constants/colors';
+import { useAuth } from '../../hooks/useAuth';
+import { db } from '../../services/firebase/config';
+import { createQuote } from '../../services/firebase/quotes';
 
 export default function CreateQuoteScreen() {
   const { carId } =
@@ -86,6 +91,7 @@ export default function CreateQuoteScreen() {
         'Login Required',
         'Please login before requesting a quote.',
       );
+
       return;
     }
 
@@ -94,6 +100,7 @@ export default function CreateQuoteScreen() {
         'Error',
         'Car listing information is missing.',
       );
+
       return;
     }
 
@@ -106,6 +113,7 @@ export default function CreateQuoteScreen() {
         'Invalid Price',
         'Please enter a valid offer price.',
       );
+
       return;
     }
 
@@ -114,15 +122,21 @@ export default function CreateQuoteScreen() {
 
       await createQuote({
         carId,
+
         buyerId: user.uid,
+
         buyerName:
           profile?.name ||
           user.displayName ||
           '',
+
         buyerPhone:
           profile?.phone || '',
+
         offeredPrice: price,
-        message: message.trim(),
+
+        message:
+          message.trim(),
       });
 
       Alert.alert(
@@ -132,7 +146,9 @@ export default function CreateQuoteScreen() {
           {
             text: 'View My Quotes',
             onPress: () =>
-              router.replace('/quotes'),
+              router.replace(
+                '/quotes',
+              ),
           },
         ],
       );
@@ -152,6 +168,10 @@ export default function CreateQuoteScreen() {
     }
   };
 
+  /* =================================== */
+  /* LOADING */
+  /* =================================== */
+
   if (loadingCar) {
     return (
       <View style={styles.center}>
@@ -159,20 +179,36 @@ export default function CreateQuoteScreen() {
           size="large"
           color={colors.primary}
         />
+
+        <Text style={styles.loadingText}>
+          Loading car...
+        </Text>
       </View>
     );
   }
 
+  /* =================================== */
+  /* CAR NOT FOUND */
+  /* =================================== */
+
   if (!car) {
     return (
       <View style={styles.center}>
+        <Ionicons
+          name="car-outline"
+          size={48}
+          color={colors.textMuted}
+        />
+
         <Text style={styles.errorTitle}>
           Car listing not found
         </Text>
 
         <Pressable
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() =>
+            router.back()
+          }
         >
           <Text style={styles.backText}>
             Go Back
@@ -182,18 +218,28 @@ export default function CreateQuoteScreen() {
     );
   }
 
+  /* =================================== */
+  /* MAIN UI */
+  /* =================================== */
+
   return (
     <View style={styles.container}>
       <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={
+          false
+        }
+        contentContainerStyle={
+          styles.content
+        }
       >
         {/* Header */}
 
         <View style={styles.header}>
           <Pressable
             style={styles.iconButton}
-            onPress={() => router.back()}
+            onPress={() =>
+              router.back()
+            }
           >
             <Ionicons
               name="arrow-back"
@@ -202,24 +248,33 @@ export default function CreateQuoteScreen() {
             />
           </Pressable>
 
-          <Text style={styles.headerTitle}>
+          <Text
+            style={styles.headerTitle}
+          >
             Request a Quote
           </Text>
 
-          <View style={styles.headerSpace} />
+          <View
+            style={styles.headerSpace}
+          />
         </View>
 
         {/* Car */}
 
         <View style={styles.carCard}>
-          <Ionicons
-            name="car-sport-outline"
-            size={32}
-            color={colors.primary}
-          />
+          <View style={styles.carIcon}>
+            <Ionicons
+              name="car-sport-outline"
+              size={32}
+              color={colors.primary}
+            />
+          </View>
 
           <View style={styles.carInfo}>
-            <Text style={styles.carName}>
+            <Text
+              style={styles.carName}
+              numberOfLines={1}
+            >
               {car.make} {car.model}
             </Text>
 
@@ -227,8 +282,13 @@ export default function CreateQuoteScreen() {
               {car.year}
             </Text>
 
-            {car.salePrice && (
-              <Text style={styles.askingPrice}>
+            {typeof car.salePrice ===
+              'number' && (
+              <Text
+                style={
+                  styles.askingPrice
+                }
+              >
                 Asking ₹
                 {car.salePrice.toLocaleString(
                   'en-IN',
@@ -247,16 +307,21 @@ export default function CreateQuoteScreen() {
             color={colors.primary}
           />
 
-          <Text style={styles.infoText}>
-            Submit the amount you'd like to offer.
-            Our team will review your quote and
-            coordinate with the seller.
+          <Text
+            style={styles.infoText}
+          >
+            Submit the amount you'd like
+            to offer. Our team will review
+            your quote and coordinate with
+            the seller.
           </Text>
         </View>
 
         {/* Offer */}
 
-        <Text style={styles.sectionTitle}>
+        <Text
+          style={styles.sectionTitle}
+        >
           Your Offer
         </Text>
 
@@ -265,19 +330,25 @@ export default function CreateQuoteScreen() {
         </Text>
 
         <View style={styles.priceInput}>
-          <Text style={styles.currency}>
+          <Text
+            style={styles.currency}
+          >
             ₹
           </Text>
 
           <TextInput
             value={offeredPrice}
-            onChangeText={setOfferedPrice}
+            onChangeText={
+              setOfferedPrice
+            }
             placeholder="Enter your offer"
             placeholderTextColor={
               colors.textMuted
             }
             keyboardType="numeric"
-            style={styles.priceTextInput}
+            style={
+              styles.priceTextInput
+            }
           />
         </View>
 
@@ -305,6 +376,7 @@ export default function CreateQuoteScreen() {
         <Pressable
           style={[
             styles.submitButton,
+
             submitting &&
               styles.submitDisabled,
           ]}
@@ -313,29 +385,285 @@ export default function CreateQuoteScreen() {
         >
           {submitting ? (
             <ActivityIndicator
-              color={colors.background}
+              color={
+                colors.background
+              }
             />
           ) : (
             <>
               <Ionicons
                 name="paper-plane-outline"
                 size={19}
-                color={colors.background}
+                color={
+                  colors.background
+                }
               />
 
-              <Text style={styles.submitText}>
+              <Text
+                style={
+                  styles.submitText
+                }
+              >
                 Submit Quote
               </Text>
             </>
           )}
         </Pressable>
 
-        <Text style={styles.disclaimer}>
-          Submitting a quote does not guarantee
-          purchase. Final terms are subject to
-          review and confirmation.
+        {/* Disclaimer */}
+
+        <Text
+          style={styles.disclaimer}
+        >
+          Submitting a quote does not
+          guarantee purchase. Final terms
+          are subject to review and
+          confirmation.
         </Text>
       </ScrollView>
     </View>
   );
 }
+
+/* ===================================== */
+/* STYLES */
+/* ===================================== */
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor:
+      colors.background,
+  },
+
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor:
+      colors.background,
+    padding: 24,
+  },
+
+  loadingText: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    marginTop: 12,
+  },
+
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 55,
+    paddingBottom: 40,
+  },
+
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 22,
+  },
+
+  iconButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    backgroundColor:
+      colors.surface,
+    borderWidth: 1,
+    borderColor:
+      colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  headerTitle: {
+    flex: 1,
+    color: colors.white,
+    fontSize: 20,
+    fontWeight: '900',
+    textAlign: 'center',
+    marginHorizontal: 12,
+  },
+
+  headerSpace: {
+    width: 42,
+  },
+
+  carCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor:
+      colors.surface,
+    borderWidth: 1,
+    borderColor:
+      colors.border,
+    borderRadius: 18,
+    padding: 16,
+  },
+
+  carIcon: {
+    width: 58,
+    height: 58,
+    borderRadius: 16,
+    backgroundColor:
+      colors.surfaceLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  carInfo: {
+    flex: 1,
+    marginLeft: 14,
+  },
+
+  carName: {
+    color: colors.white,
+    fontSize: 17,
+    fontWeight: '900',
+  },
+
+  carYear: {
+    color: colors.textMuted,
+    fontSize: 11,
+    marginTop: 3,
+  },
+
+  askingPrice: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '800',
+    marginTop: 6,
+  },
+
+  infoCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginTop: 16,
+    backgroundColor:
+      colors.surface,
+    borderWidth: 1,
+    borderColor:
+      colors.border,
+    borderRadius: 16,
+    padding: 15,
+  },
+
+  infoText: {
+    flex: 1,
+    color: colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 18,
+    marginLeft: 10,
+  },
+
+  sectionTitle: {
+    color: colors.white,
+    fontSize: 20,
+    fontWeight: '900',
+    marginTop: 28,
+    marginBottom: 14,
+  },
+
+  label: {
+    color: colors.textMuted,
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+    marginBottom: 7,
+    marginTop: 14,
+  },
+
+  priceInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor:
+      colors.surface,
+    borderWidth: 1,
+    borderColor:
+      colors.border,
+    borderRadius: 14,
+    minHeight: 54,
+  },
+
+  currency: {
+    color: colors.primary,
+    fontSize: 18,
+    fontWeight: '900',
+    paddingLeft: 15,
+  },
+
+  priceTextInput: {
+    flex: 1,
+    color: colors.white,
+    fontSize: 15,
+    paddingHorizontal: 10,
+    paddingVertical: 14,
+  },
+
+  messageInput: {
+    minHeight: 125,
+    backgroundColor:
+      colors.surface,
+    borderWidth: 1,
+    borderColor:
+      colors.border,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    color: colors.white,
+    fontSize: 13,
+  },
+
+  submitButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 9,
+    marginTop: 28,
+    backgroundColor:
+      colors.primary,
+    borderRadius: 14,
+    minHeight: 52,
+    paddingHorizontal: 20,
+  },
+
+  submitDisabled: {
+    opacity: 0.5,
+  },
+
+  submitText: {
+    color: colors.background,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+
+  disclaimer: {
+    color: colors.textMuted,
+    fontSize: 10,
+    lineHeight: 16,
+    textAlign: 'center',
+    marginTop: 14,
+  },
+
+  errorTitle: {
+    color: colors.white,
+    fontSize: 18,
+    fontWeight: '900',
+    marginTop: 14,
+  },
+
+  backButton: {
+    marginTop: 20,
+    backgroundColor:
+      colors.primary,
+    borderRadius: 12,
+    paddingHorizontal: 22,
+    paddingVertical: 12,
+  },
+
+  backText: {
+    color: colors.background,
+    fontSize: 12,
+    fontWeight: '900',
+  },
+});

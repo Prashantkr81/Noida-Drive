@@ -1,3 +1,5 @@
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import {
   Alert,
   Pressable,
@@ -6,8 +8,6 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 
 import { colors } from '../../constants/colors';
 import { useAuth } from '../../hooks/useAuth';
@@ -230,7 +230,7 @@ export default function ProfileScreen() {
             title="Help & Support"
             subtitle="Get help with Noida Drive"
             onPress={() =>
-              router.push('/help')
+              router.push('/help-support')
             }
           />
 
@@ -241,7 +241,7 @@ export default function ProfileScreen() {
             title="Contact Us"
             subtitle="Talk to our team"
             onPress={() =>
-              router.push('/contact')
+              router.push('/contact-us')
             }
           />
 
