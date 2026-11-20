@@ -81,7 +81,7 @@ export default function ProfileScreen() {
             </Text>
           </View>
 
-          <Pressable
+          {/* <Pressable
             style={styles.settingsButton}
             onPress={() =>
               router.push('/settings')
@@ -92,7 +92,7 @@ export default function ProfileScreen() {
               size={21}
               color={colors.white}
             />
-          </Pressable>
+          </Pressable> */}
         </View>
 
         {/* Profile Card */}

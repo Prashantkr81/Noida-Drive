@@ -70,19 +70,20 @@ function AppNavigator() {
       return;
     }
 
+    // First-time user
     if (!onboardingCompleted) {
-      router.replace(
-        '/onboarding',
-      );
-
+      router.replace('/onboarding');
       return;
     }
 
+    // Onboarding completed but user is logged out
     if (!user) {
-      router.replace(
-        '/(auth)/login',
-      );
+      router.replace('/(auth)/login');
+      return;
     }
+
+    // User is authenticated.
+    // Expo Router will keep the current authenticated route.
   }, [
     user,
     loading,

@@ -10,6 +10,12 @@
     ],
     "android": {
       "package": "com.prashantkr81.noidadrive"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0a13c026-f771-4cd3-a6f6-be4d0f4a853b"
+      }
     }
   }
 }
