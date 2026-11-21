@@ -1,3 +1,4 @@
+
 import {
   ActivityIndicator,
   Pressable,
@@ -6,33 +7,39 @@ import {
   Text,
   View,
 } from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
+
 import {
   router,
   useLocalSearchParams,
 } from 'expo-router';
+
 import {
   doc,
   onSnapshot,
 } from 'firebase/firestore';
+
 import { useEffect, useState } from 'react';
 
 import { colors } from '../../constants/colors';
 import { db } from '../../services/firebase/config';
 import { Booking } from '../../types';
 
+type BookingWithDriver = Booking & {
+  driverId?: string | null;
+  driverName?: string | null;
+  driverPhone?: string | null;
+};
+
 export default function BookingDetailsScreen() {
-  const { id } =
-    useLocalSearchParams<{ id: string }>();
+  const { id } = useLocalSearchParams<{ id: string }>();
 
   const [booking, setBooking] =
-    useState<Booking | null>(null);
+    useState<BookingWithDriver | null>(null);
 
-  const [loading, setLoading] =
-    useState(true);
-
-  const [error, setError] =
-    useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!id) {
@@ -41,25 +48,19 @@ export default function BookingDetailsScreen() {
       return;
     }
 
-    const bookingRef = doc(
-      db,
-      'bookings',
-      id,
-    );
+    const bookingRef = doc(db, 'bookings', id);
 
     const unsubscribe = onSnapshot(
       bookingRef,
       (snapshot) => {
         if (!snapshot.exists()) {
           setBooking(null);
-          setError(
-            'This rental request no longer exists.',
-          );
+          setError('This rental request no longer exists.');
         } else {
           setBooking({
             id: snapshot.id,
             ...snapshot.data(),
-          } as Booking);
+          } as BookingWithDriver);
 
           setError('');
         }
@@ -69,15 +70,12 @@ export default function BookingDetailsScreen() {
       (firebaseError) => {
         console.error(
           'BOOKING DETAILS ERROR:',
-          firebaseError,
+          firebaseError
         );
 
-        setError(
-          'Unable to load rental request.',
-        );
-
+        setError('Unable to load rental request.');
         setLoading(false);
-      },
+      }
     );
 
     return unsubscribe;
@@ -114,17 +112,14 @@ export default function BookingDetailsScreen() {
         </Text>
 
         <Text style={styles.errorText}>
-          {error ||
-            'This request could not be found.'}
+          {error || 'This request could not be found.'}
         </Text>
 
         <Pressable
           style={styles.primaryButton}
           onPress={() => router.back()}
         >
-          <Text
-            style={styles.primaryButtonText}
-          >
+          <Text style={styles.primaryButtonText}>
             Go Back
           </Text>
         </Pressable>
@@ -132,18 +127,20 @@ export default function BookingDetailsScreen() {
     );
   }
 
-  const status =
-    getStatusConfig(
-      booking.status,
-    );
+  const status = getStatusConfig(booking.status);
+
+  // Live tracking is available only for confirmed
+  // chauffeur bookings with an assigned driver.
+  const canTrackDriver =
+    booking.rentalType === 'chauffeur' &&
+    booking.status === 'confirmed' &&
+    !!booking.driverId;
 
   return (
     <View style={styles.container}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={
-          styles.content
-        }
+        contentContainerStyle={styles.content}
       >
         {/* HEADER */}
 
@@ -177,8 +174,7 @@ export default function BookingDetailsScreen() {
             style={[
               styles.statusIcon,
               {
-                backgroundColor:
-                  `${status.color}15`,
+                backgroundColor: `${status.color}15`,
               },
             ]}
           >
@@ -197,23 +193,99 @@ export default function BookingDetailsScreen() {
             <Text
               style={[
                 styles.status,
-                {
-                  color: status.color,
-                },
+                { color: status.color },
               ]}
             >
               {status.label}
             </Text>
 
-            <Text
-              style={styles.statusDescription}
-            >
+            <Text style={styles.statusDescription}>
               {status.description}
             </Text>
           </View>
         </View>
 
-        {/* CAR */}
+        {/* LIVE DRIVER TRACKING */}
+
+        {canTrackDriver && (
+          <View style={styles.trackingCard}>
+            <View style={styles.trackingInfo}>
+              <View style={styles.trackingIcon}>
+                <Ionicons
+                  name="navigate-circle-outline"
+                  size={30}
+                  color={colors.primary}
+                />
+              </View>
+
+              <View style={styles.trackingContent}>
+                <Text style={styles.trackingTitle}>
+                  Driver Assigned
+                </Text>
+
+                <Text style={styles.trackingDescription}>
+                  {booking.driverName
+                    ? `${booking.driverName} is assigned to your ride.`
+                    : 'Your driver has been assigned.'}
+                </Text>
+
+                <Text style={styles.trackingSubtext}>
+                  Track your driver's live location.
+                </Text>
+              </View>
+            </View>
+
+            <Pressable
+              style={styles.trackButton}
+              onPress={() =>
+                router.push(`/track-driver/${id}` as any)
+              }
+            >
+              <Ionicons
+                name="location-outline"
+                size={19}
+                color={colors.background}
+              />
+
+              <Text style={styles.trackButtonText}>
+                Track Driver
+              </Text>
+
+              <Ionicons
+                name="arrow-forward"
+                size={17}
+                color={colors.background}
+              />
+            </Pressable>
+          </View>
+        )}
+
+        {/* DRIVER NOT YET ASSIGNED */}
+
+        {booking.rentalType === 'chauffeur' &&
+          booking.status === 'confirmed' &&
+          !booking.driverId && (
+            <View style={styles.waitingCard}>
+              <Ionicons
+                name="time-outline"
+                size={22}
+                color="#F59E0B"
+              />
+
+              <View style={styles.waitingContent}>
+                <Text style={styles.waitingTitle}>
+                  Driver Assignment Pending
+                </Text>
+
+                <Text style={styles.waitingDescription}>
+                  Your booking is confirmed. Live tracking
+                  will become available once a driver is assigned.
+                </Text>
+              </View>
+            </View>
+          )}
+
+        {/* VEHICLE */}
 
         <SectionTitle title="Vehicle" />
 
@@ -228,8 +300,7 @@ export default function BookingDetailsScreen() {
 
           <View style={styles.carInfo}>
             <Text style={styles.carName}>
-              {booking.carMake}{' '}
-              {booking.carModel}
+              {booking.carMake} {booking.carModel}
             </Text>
 
             <Text style={styles.carId}>
@@ -238,7 +309,7 @@ export default function BookingDetailsScreen() {
           </View>
         </View>
 
-        {/* RENTAL */}
+        {/* RENTAL DETAILS */}
 
         <SectionTitle title="Rental Details" />
 
@@ -247,8 +318,7 @@ export default function BookingDetailsScreen() {
             icon="options-outline"
             label="Rental Type"
             value={
-              booking.rentalType ===
-              'chauffeur'
+              booking.rentalType === 'chauffeur'
                 ? 'Chauffeur'
                 : 'Self Drive'
             }
@@ -257,39 +327,29 @@ export default function BookingDetailsScreen() {
           <Detail
             icon="calendar-outline"
             label="Start Date"
-            value={formatDate(
-              booking.startDate,
-            )}
+            value={formatDate(booking.startDate)}
           />
 
           <Detail
             icon="calendar-outline"
             label="End Date"
-            value={formatDate(
-              booking.endDate,
-            )}
+            value={formatDate(booking.endDate)}
           />
 
           <Detail
             icon="location-outline"
             label="Pickup Location"
-            value={
-              booking.pickupLocation ||
-              'Not specified'
-            }
+            value={booking.pickupLocation || 'Not specified'}
           />
 
           <Detail
             icon="navigate-outline"
             label="Drop Location"
-            value={
-              booking.dropLocation ||
-              'Not specified'
-            }
+            value={booking.dropLocation || 'Not specified'}
           />
         </View>
 
-        {/* PRICE */}
+        {/* PRICING */}
 
         <SectionTitle title="Pricing" />
 
@@ -302,10 +362,8 @@ export default function BookingDetailsScreen() {
             <Text style={styles.estimatedPrice}>
               ₹
               {Number(
-                booking.estimatedPrice || 0,
-              ).toLocaleString(
-                'en-IN',
-              )}
+                booking.estimatedPrice || 0
+              ).toLocaleString('en-IN')}
             </Text>
           </View>
 
@@ -319,10 +377,8 @@ export default function BookingDetailsScreen() {
             <Text style={styles.finalPrice}>
               {booking.finalPrice != null
                 ? `₹${Number(
-                    booking.finalPrice,
-                  ).toLocaleString(
-                    'en-IN',
-                  )}`
+                    booking.finalPrice
+                  ).toLocaleString('en-IN')}`
                 : 'To be confirmed'}
             </Text>
           </View>
@@ -374,20 +430,14 @@ export default function BookingDetailsScreen() {
           <>
             <SectionTitle title="Reason" />
 
-            <View
-              style={styles.rejectionCard}
-            >
+            <View style={styles.rejectionCard}>
               <Ionicons
                 name="close-circle-outline"
                 size={20}
                 color={colors.error}
               />
 
-              <Text
-                style={
-                  styles.rejectionText
-                }
-              >
+              <Text style={styles.rejectionText}>
                 {booking.rejectionReason}
               </Text>
             </View>
@@ -410,20 +460,17 @@ export default function BookingDetailsScreen() {
   );
 }
 
-/* ===================================== */
-/* STATUS */
-/* ===================================== */
+/* =====================================
+   STATUS
+===================================== */
 
-function getStatusConfig(
-  status: Booking['status'],
-) {
+function getStatusConfig(status: Booking['status']) {
   switch (status) {
     case 'reviewing':
       return {
         label: 'Under Review',
         color: '#F59E0B',
-        icon:
-          'eye-outline' as const,
+        icon: 'eye-outline' as const,
         description:
           'Our team is currently reviewing your rental request.',
       };
@@ -432,8 +479,7 @@ function getStatusConfig(
       return {
         label: 'Confirmed',
         color: '#22C55E',
-        icon:
-          'checkmark-circle-outline' as const,
+        icon: 'checkmark-circle-outline' as const,
         description:
           'Your rental request has been confirmed.',
       };
@@ -442,8 +488,7 @@ function getStatusConfig(
       return {
         label: 'Rejected',
         color: colors.error,
-        icon:
-          'close-circle-outline' as const,
+        icon: 'close-circle-outline' as const,
         description:
           'Your rental request was not approved.',
       };
@@ -452,8 +497,7 @@ function getStatusConfig(
       return {
         label: 'Cancelled',
         color: colors.textMuted,
-        icon:
-          'remove-circle-outline' as const,
+        icon: 'remove-circle-outline' as const,
         description:
           'This rental request has been cancelled.',
       };
@@ -462,8 +506,7 @@ function getStatusConfig(
       return {
         label: 'Completed',
         color: '#22C55E',
-        icon:
-          'checkmark-done-outline' as const,
+        icon: 'checkmark-done-outline' as const,
         description:
           'This rental has been completed.',
       };
@@ -473,23 +516,18 @@ function getStatusConfig(
       return {
         label: 'Pending',
         color: colors.primary,
-        icon:
-          'time-outline' as const,
+        icon: 'time-outline' as const,
         description:
           'Your rental request is waiting for review.',
       };
   }
 }
 
-/* ===================================== */
-/* SECTION */
-/* ===================================== */
+/* =====================================
+   SECTION TITLE
+===================================== */
 
-function SectionTitle({
-  title,
-}: {
-  title: string;
-}) {
+function SectionTitle({ title }: { title: string }) {
   return (
     <Text style={styles.sectionTitle}>
       {title}
@@ -497,9 +535,9 @@ function SectionTitle({
   );
 }
 
-/* ===================================== */
-/* DETAIL */
-/* ===================================== */
+/* =====================================
+   DETAIL
+===================================== */
 
 function Detail({
   icon,
@@ -533,13 +571,11 @@ function Detail({
   );
 }
 
-/* ===================================== */
-/* DATE */
-/* ===================================== */
+/* =====================================
+   DATE FORMATTER
+===================================== */
 
-function formatDate(
-  value: unknown,
-) {
+function formatDate(value: unknown) {
   if (typeof value === 'string') {
     return value || 'N/A';
   }
@@ -550,33 +586,27 @@ function formatDate(
     'toDate' in value
   ) {
     const date = (
-      value as {
-        toDate: () => Date;
-      }
+      value as { toDate: () => Date }
     ).toDate();
 
-    return date.toLocaleDateString(
-      'en-IN',
-      {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      },
-    );
+    return date.toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
   }
 
   return 'N/A';
 }
 
-/* ===================================== */
-/* STYLES */
-/* ===================================== */
+/* =====================================
+   STYLES
+===================================== */
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor:
-      colors.background,
+    backgroundColor: colors.background,
   },
 
   content: {
@@ -587,8 +617,7 @@ const styles = StyleSheet.create({
 
   center: {
     flex: 1,
-    backgroundColor:
-      colors.background,
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 30,
@@ -612,11 +641,9 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 13,
-    backgroundColor:
-      colors.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor:
-      colors.border,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 13,
@@ -641,11 +668,9 @@ const styles = StyleSheet.create({
   statusCard: {
     padding: 15,
     borderRadius: 17,
-    backgroundColor:
-      colors.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor:
-      colors.border,
+    borderColor: colors.border,
     flexDirection: 'row',
   },
 
@@ -682,6 +707,103 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
+  /* Driver Tracking */
+
+  trackingCard: {
+    marginTop: 20,
+    padding: 16,
+    borderRadius: 17,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+
+  trackingInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+
+  trackingIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: colors.surfaceLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  trackingContent: {
+    flex: 1,
+  },
+
+  trackingTitle: {
+    color: colors.white,
+    fontSize: 15,
+    fontWeight: '900',
+  },
+
+  trackingDescription: {
+    color: colors.textSecondary,
+    fontSize: 10,
+    marginTop: 5,
+    lineHeight: 15,
+  },
+
+  trackingSubtext: {
+    color: colors.primary,
+    fontSize: 10,
+    marginTop: 4,
+  },
+
+  trackButton: {
+    backgroundColor: colors.primary,
+    padding: 14,
+    borderRadius: 12,
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+
+  trackButtonText: {
+    color: colors.background,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+
+  /* Waiting for Driver */
+
+  waitingCard: {
+    marginTop: 20,
+    padding: 15,
+    borderRadius: 15,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+
+  waitingContent: {
+    flex: 1,
+  },
+
+  waitingTitle: {
+    color: colors.white,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+
+  waitingDescription: {
+    color: colors.textSecondary,
+    fontSize: 10,
+    lineHeight: 15,
+    marginTop: 5,
+  },
+
   /* Sections */
 
   sectionTitle: {
@@ -693,11 +815,9 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor:
-      colors.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor:
-      colors.border,
+    borderColor: colors.border,
     borderRadius: 17,
     padding: 15,
   },
@@ -708,8 +828,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 14,
-    backgroundColor:
-      colors.surfaceLight,
+    backgroundColor: colors.surfaceLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -742,8 +861,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor:
-      colors.surfaceLight,
+    backgroundColor: colors.surfaceLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -769,19 +887,16 @@ const styles = StyleSheet.create({
   /* Price */
 
   priceCard: {
-    backgroundColor:
-      colors.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor:
-      colors.border,
+    borderColor: colors.border,
     borderRadius: 17,
     padding: 16,
   },
 
   priceRow: {
     flexDirection: 'row',
-    justifyContent:
-      'space-between',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
 
@@ -804,19 +919,16 @@ const styles = StyleSheet.create({
 
   divider: {
     height: 1,
-    backgroundColor:
-      colors.border,
+    backgroundColor: colors.border,
     marginVertical: 13,
   },
 
   /* Notes */
 
   noteCard: {
-    backgroundColor:
-      colors.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor:
-      colors.border,
+    borderColor: colors.border,
     borderRadius: 14,
     padding: 14,
     flexDirection: 'row',
@@ -831,11 +943,9 @@ const styles = StyleSheet.create({
   },
 
   rejectionCard: {
-    backgroundColor:
-      'rgba(239,68,68,0.08)',
+    backgroundColor: 'rgba(239,68,68,0.08)',
     borderWidth: 1,
-    borderColor:
-      'rgba(239,68,68,0.2)',
+    borderColor: 'rgba(239,68,68,0.2)',
     borderRadius: 14,
     padding: 14,
     flexDirection: 'row',
@@ -854,11 +964,9 @@ const styles = StyleSheet.create({
   idCard: {
     marginTop: 20,
     padding: 13,
-    backgroundColor:
-      colors.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor:
-      colors.border,
+    borderColor: colors.border,
     borderRadius: 12,
   },
 
@@ -881,8 +989,7 @@ const styles = StyleSheet.create({
     width: 75,
     height: 75,
     borderRadius: 24,
-    backgroundColor:
-      'rgba(239,68,68,0.08)',
+    backgroundColor: 'rgba(239,68,68,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -908,8 +1015,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 25,
     marginTop: 20,
     borderRadius: 13,
-    backgroundColor:
-      colors.primary,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
